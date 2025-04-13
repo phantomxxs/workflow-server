@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import { projectRoutes } from "./routes/projects";
+import { tasksRouter } from "./routes/tasks";
 
 // ROUTES IMPORTS
 
@@ -21,6 +22,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
 app.use("/projects", projectRoutes);
+app.use("/tasks", tasksRouter);
 
 // ROUTES
 app.get("/", (req, res) => {

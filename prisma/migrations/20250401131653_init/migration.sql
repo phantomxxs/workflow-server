@@ -53,7 +53,7 @@ CREATE TABLE "Task" (
     "points" INTEGER,
     "projectId" INTEGER,
     "authorUserId" INTEGER NOT NULL,
-    "assignedUserId" INTEGER NOT NULL,
+    "assignedUserId" INTEGER[],
 
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
 );
@@ -80,12 +80,11 @@ CREATE TABLE "Comment" (
 );
 
 -- CreateTable
-CREATE TABLE "TaskAssignment" (
-    "id" SERIAL NOT NULL,
-    "userId" INTEGER,
-    "taskId" INTEGER,
+CREATE TABLE "_TaskAssignee" (
+    "A" INTEGER NOT NULL,
+    "B" INTEGER NOT NULL,
 
-    CONSTRAINT "TaskAssignment_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "_TaskAssignee_AB_pkey" PRIMARY KEY ("A","B")
 );
 
 -- CreateIndex
@@ -93,6 +92,9 @@ CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_cognitoId_key" ON "User"("cognitoId");
+
+-- CreateIndex
+CREATE INDEX "_TaskAssignee_B_index" ON "_TaskAssignee"("B");
 
 -- AddForeignKey
 ALTER TABLE "ProjectTeam" ADD CONSTRAINT "ProjectTeam_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -110,9 +112,6 @@ ALTER TABLE "Task" ADD CONSTRAINT "Task_projectId_fkey" FOREIGN KEY ("projectId"
 ALTER TABLE "Task" ADD CONSTRAINT "Task_authorUserId_fkey" FOREIGN KEY ("authorUserId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Task" ADD CONSTRAINT "Task_assignedUserId_fkey" FOREIGN KEY ("assignedUserId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Attachment" ADD CONSTRAINT "Attachment_uploadedById_fkey" FOREIGN KEY ("uploadedById") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -125,7 +124,7 @@ ALTER TABLE "Comment" ADD CONSTRAINT "Comment_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TaskAssignment" ADD CONSTRAINT "TaskAssignment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("userId") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "_TaskAssignee" ADD CONSTRAINT "_TaskAssignee_A_fkey" FOREIGN KEY ("A") REFERENCES "Task"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TaskAssignment" ADD CONSTRAINT "TaskAssignment_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "_TaskAssignee" ADD CONSTRAINT "_TaskAssignee_B_fkey" FOREIGN KEY ("B") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;

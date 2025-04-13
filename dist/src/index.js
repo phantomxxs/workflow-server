@@ -10,6 +10,7 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const morgan_1 = __importDefault(require("morgan"));
 const projects_1 = require("./routes/projects");
+const tasks_1 = require("./routes/tasks");
 // ROUTES IMPORTS
 // CONFIGS
 dotenv_1.default.config();
@@ -22,6 +23,7 @@ app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use((0, cors_1.default)());
 app.use("/projects", projects_1.projectRoutes);
+app.use("/tasks", tasks_1.tasksRouter);
 // ROUTES
 app.get("/", (req, res) => {
     res.send("Work flow server...");

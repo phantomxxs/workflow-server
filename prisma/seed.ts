@@ -1,14 +1,21 @@
-import { PrismaClient, Team, Project } from '@prisma/client';
-import fs from 'fs';
-import path from 'path';
+import { PrismaClient, Team, Project } from "@prisma/client";
+import fs from "fs";
+import path from "path";
 
 const prisma = new PrismaClient();
 
-async function deleteAllData(orderedFileNames: string[]): Promise<void> {
-  const modelNames = orderedFileNames.map((fileName) => {
-    const modelName = path.basename(fileName, path.extname(fileName));
-    return modelName.charAt(0).toUpperCase() + modelName.slice(1);
-  });
+async function deleteAllData(): Promise<void> {
+  // Include all models, including ProjectTeam, in the clearing process
+  // Clear data in reverse dependency order
+  const modelNames = [
+    "Comment",
+    "Attachment",
+    "Task",
+    "User",
+    "ProjectTeam",
+    "Project",
+    "Team",
+  ];
 
   for (const modelName of modelNames) {
     const model = prisma[modelName as keyof typeof prisma] as any;
@@ -26,17 +33,21 @@ async function seedData(
   dataDirectory: string
 ): Promise<void> {
   for (const fileName of orderedFileNames) {
-    if (fileName === 'projectTeam.json') continue; // Skip projectTeam to handle dynamically
+    if (fileName === "projectTeam.json") continue; // Skip projectTeam to handle dynamically
 
     const filePath = path.join(dataDirectory, fileName);
-    const jsonData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const jsonData = JSON.parse(fs.readFileSync(filePath, "utf-8"));
     const modelName = path.basename(fileName, path.extname(fileName));
     const model = prisma[modelName as keyof typeof prisma] as any;
 
     try {
-      for (const data of jsonData) {
-        await model.create({ data });
-      }
+      // Remove `id` fields if they exist to let Prisma auto-increment
+      const cleanedData = jsonData.map((data: any) => {
+        const { id, ...rest } = data;
+        return rest;
+      });
+
+      await model.createMany({ data: cleanedData });
       console.log(`Seeded ${modelName} with data from ${fileName}`);
     } catch (error) {
       console.error(`Error seeding data for ${modelName}:`, error);
@@ -57,27 +68,27 @@ async function seedProjectTeams(): Promise<void> {
 
   try {
     await prisma.projectTeam.createMany({ data: projectTeams });
-    console.log('Seeded projectTeam dynamically.');
+    console.log("Seeded projectTeam dynamically.");
   } catch (error) {
-    console.error('Error seeding projectTeam:', error);
+    console.error("Error seeding projectTeam:", error);
   }
 }
 
 async function main(): Promise<void> {
-  const dataDirectory = path.join(__dirname, 'seedData');
+  const dataDirectory = path.join(__dirname, "seedData");
 
+  // Define the correct seeding order
   const orderedFileNames = [
-    'team.json',
-    'project.json',
-    'user.json',
-    'task.json',
-    'attachment.json',
-    'comment.json',
-    'taskAssignment.json',
+    "team.json",
+    "project.json",
+    "user.json",
+    "task.json",
+    "attachment.json",
+    "comment.json",
   ];
 
-  await deleteAllData(orderedFileNames);
-  await seedData(orderedFileNames, dataDirectory);
+  await deleteAllData();
+  await seedData(orderedFileNames, dataDirectory); // Seed data in correct order
   await seedProjectTeams();
 }
 
